@@ -5,6 +5,7 @@
 class CigaretteButt : public Enemy {
 private:
     int decayRadius;
+    int lifetime = 20;
 
 public:
     CigaretteButt(Position pos)
@@ -18,4 +19,5 @@ public:
 
     char getSymbol() const override { return 'X'; }
     std::string getType() const override { return "CigaretteButt"; }
+    bool isAlive() const override { return lifetime > 0; }
 };

@@ -6,6 +6,7 @@
 class Beetle : public Enemy {
 private:
     Direction dir;
+    int lifetime = 30;
 
 public:
     Beetle(Position pos, Direction d)
@@ -17,4 +18,5 @@ public:
 
     char getSymbol() const override { return 'B'; }
     std::string getType() const override { return "Beetle"; }
+    bool isAlive() const override { return lifetime > 0; }
 };

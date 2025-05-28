@@ -12,6 +12,8 @@ public:
     Anthill(Position pos) : Entity(pos), age(0), population(0), foodStored(0) {}
 
     void addFood(int n) { foodStored += n; }
+    int getFoodCount() const { return foodStored; }
+    void consumeFood(int amount) { foodStored = std::max(0, foodStored - amount); }
     void grow() { ++age; }
 
     char getSymbol() const override { return 'H'; }
