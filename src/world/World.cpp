@@ -1,4 +1,7 @@
 #include "../../include/world/World.hpp"
+
+#include <iostream>
+
 #include "../../include/core/Grid.hpp"
 #include "../../include/entities/WorkerAnt.hpp"
 #include "../../include/entities/WarriorAnt.hpp"
@@ -16,6 +19,7 @@ World::World(int width, int height) : grid(width, height), stepCount(0) {
 
     Position hillPos = {width / 2, height / 2};
     auto hill = std::make_shared<Anthill>(hillPos);
+    anthill = std::make_shared<Anthill>(hillPos);
     grid.place(hill);
 
     for (int i = 0; i < 3; ++i) {
@@ -31,6 +35,7 @@ void World::spawnWorkerAnt(const Position& center) {
     Position pos = center.offset(Random::randint(-1, 1), Random::randint(-1, 1));
     if (grid.isInside(pos) && !grid.get(pos)) {
         grid.place(std::make_shared<WorkerAnt>(pos, dir));
+        anthill->increasePopulation();
     }
 }
 
@@ -39,6 +44,7 @@ void World::spawnWarriorAnt(const Position& center) {
     Position pos = center.offset(Random::randint(-1, 1), Random::randint(-1, 1));
     if (grid.isInside(pos) && !grid.get(pos)) {
         grid.place(std::make_shared<WarriorAnt>(pos, dir));
+        anthill->increasePopulation();
     }
 }
 
@@ -52,7 +58,8 @@ void World::spawnFood() {
 void World::spawnBeetle() {
     Position pos{Random::randint(0, grid.getWidth() - 1), Random::randint(0, grid.getHeight() - 1)};
     if (!grid.get(pos)) {
-        grid.place(std::make_shared<Beetle>(pos));
+        Direction dir = static_cast<Direction>(Random::randint(0, 3));
+        grid.place(std::make_shared<Beetle>(pos, dir));
     }
 }
 
@@ -112,4 +119,77 @@ void World::update() {
 
 void World::draw() const {
     grid.draw();
+}
+
+void World::runStep() {
+    ++stepCount;
+    update();
+
+    const int maxFoodCount = 5;
+    int currentFood = 0;
+
+    for (int y = 0; y < grid.getHeight(); ++y) {
+        for (int x = 0; x < grid.getWidth(); ++x) {
+            auto obj = grid.get({x, y});
+            if (obj && obj->getType() == "Food") {
+                ++currentFood;
+            }
+        }
+    }
+
+    if (currentFood < maxFoodCount) {
+        spawnFood();
+    }
+
+    if (Random::randint(0, 19) == 0) {
+        spawnBeetle();
+    }
+
+    if (Random::randint(0, 29) == 0) {
+        spawnCigaretteButt();
+    }
+
+    if (stepCount % 20 == 0) {
+        anthill->grow();
+    }
+}
+
+void World::render() const {
+    draw();
+}
+
+void World::getStats() {
+    int workers = 0;
+    int warriors = 0;
+    int foodCount = 0;
+    int pheromones = 0;
+    int beetles = 0;
+    int butts = 0;
+    int totalAnts = 0;
+
+    for (int y = 0; y < grid.getHeight(); ++y) {
+        for (int x = 0; x < grid.getWidth(); ++x) {
+            auto entity = grid.get({x, y});
+            if (!entity) continue;
+
+            if (entity->getType() == "WorkerAnt") workers++;
+            else if (entity->getType() == "WarriorAnt") warriors++;
+            else if (entity->getType() == "Food") foodCount++;
+            else if (entity->getType() == "Pheromone") pheromones++;
+            else if (entity->getType() == "Beetle") beetles++;
+            else if (entity->getType() == "CigaretteButt") butts++;
+        }
+    }
+
+    totalAnts = workers + warriors;
+
+    std::cout << "Шаг симуляции: " << stepCount << "\n";
+    std::cout << "Муравьи: " << totalAnts << " (Рабочие: " << workers << ", Воины: " << warriors << ")\n";
+    std::cout << "Пища на поле: " << foodCount << "\n";
+    std::cout << "Феромоны: " << pheromones << "\n";
+    std::cout << "Жуки: " << beetles << "\n";
+    std::cout << "Окурки: " << butts << "\n";
+    std::cout << "Собрано пищи в муравейнике: " << anthill->getFoodCount() << "\n";
+    std::cout << "Возраст муравейника: " << anthill->getAge() << "\n";
+    std::cout << "Популяция: " << anthill->getPopulation() << "\n";
 }

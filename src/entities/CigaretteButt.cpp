@@ -1,6 +1,6 @@
-#include "../../include/entities/CigaretteButt.hpp"
-#include "../../include/entities/Ant.hpp"
-#include "../../include/core/Grid.hpp"
+#include <core/Grid.hpp>
+#include <entities/Ant.hpp>
+#include <entities/CigaretteButt.hpp>
 
 extern Grid* globalGrid;
 
@@ -11,14 +11,20 @@ void CigaretteButt::update() {
         for (int dy = -decayRadius; dy <= decayRadius; ++dy) {
             if (dx == 0 && dy == 0) continue;
             Position adj = pos.offset(dx, dy);
+            if (!globalGrid->isInside(adj)) continue;
+
             auto target = globalGrid->get(adj);
             if (target && target->getType().find("Ant") != std::string::npos) {
                 auto ant = std::dynamic_pointer_cast<Ant>(target);
-                if (ant) ant->damage(attackPower);
+                if (ant && ant->isAlive()) {
+                    ant->damage(attackPower);
+                }
             }
         }
     }
 
     if (health > 0) --health;
-    if (health <= 0) globalGrid->removeEntity(pos);
+    if (health <= 0) {
+        globalGrid->removeEntity(pos);
+    }
 }

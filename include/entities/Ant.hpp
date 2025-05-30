@@ -17,7 +17,11 @@ public:
     Direction getDirection() const { return direction; }
     void setDirection(Direction d) { direction = d; }
 
-    void ageStep() { ++age; }
+    void ageStep() {
+        ++age;
+        health -= 1;
+        if (age > 200) health = 0;
+    }
     void damage(int amount) { health -= amount; }
     void heal(int amount) { health += amount; }
 

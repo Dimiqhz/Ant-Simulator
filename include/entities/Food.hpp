@@ -5,9 +5,10 @@
 class Food : public Entity {
 private:
     int units;
+    int quantity;
 
 public:
-    Food(Position pos, int amount) : Entity(pos), units(amount) {}
+    Food(Position pos) : Entity(pos), quantity(5) {}
 
     int take(int n);
     bool isDepleted() const;

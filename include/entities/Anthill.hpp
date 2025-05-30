@@ -16,6 +16,10 @@ public:
     void consumeFood(int amount) { foodStored = std::max(0, foodStored - amount); }
     void grow() { ++age; }
 
+    int getAge() const { return age; }
+    int getPopulation() const { return population; }
+    void increasePopulation(int n = 1) { population += n; }
+
     char getSymbol() const override { return 'H'; }
     std::string getType() const override { return "Anthill"; }
 };

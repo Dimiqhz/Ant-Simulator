@@ -55,12 +55,5 @@ public:
 
     void draw() const;
 
-    int getWidth() const { return width; }
-    int getHeight() const { return height; }
-
-    std::vector<std::shared_ptr<Entity>> getAllEntities() const;
-    std::vector<std::shared_ptr<Entity>> getEntitiesOfType(const std::string& type) const;
-
-    void remove(const Position& pos);
     void removeEntity(const Position& pos) { remove(pos); } // alias
 };

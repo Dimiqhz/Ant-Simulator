@@ -3,11 +3,27 @@
 #include <string>
 #include <thread>
 #include <chrono>
+#include <map>
 
 int main(int argc, char** argv) {
-    bool autoMode = (argc > 1 && std::string(argv[1]) == "--auto");
+    int width = 8;
+    int height = 8;
+    bool autoMode = false;
 
-    World world(20, 20);
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg.starts_with("--width=")) {
+            width = std::stoi(arg.substr(8));
+        } else if (arg.starts_with("--height=")) {
+            height = std::stoi(arg.substr(9));
+        } else if (arg == "--auto") {
+            autoMode = true;
+        } else {
+            std::cerr << "Неизвестный аргумент: " << arg << "\n";
+        }
+    }
+
+    World world(width, height);
     std::string input;
 
     while (true) {
