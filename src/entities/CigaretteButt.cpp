@@ -1,8 +1,7 @@
 #include <core/Grid.hpp>
 #include <entities/Ant.hpp>
 #include <entities/CigaretteButt.hpp>
-
-extern Grid* globalGrid;
+#include "../include/Globals.hpp"
 
 void CigaretteButt::update() {
     Position pos = getPosition();

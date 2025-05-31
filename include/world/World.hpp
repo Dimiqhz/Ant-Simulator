@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Globals.hpp>
+
 #include "../core/Grid.hpp"
 #include "../core/Position.hpp"
 #include <memory>
@@ -10,9 +12,8 @@ private:
     Grid grid;
     int stepCount;
     std::shared_ptr<Anthill> anthill;
+    std::vector<std::shared_ptr<Entity>> entities;
 
-    void spawnWorkerAnt(const Position& center);
-    void spawnWarriorAnt(const Position& center);
     void spawnFood();
     void spawnBeetle();
     void spawnCigaretteButt();
@@ -23,8 +24,14 @@ public:
     void update();
     void draw() const;
 
+    void init();
 
     void runStep();
     void render() const;
     void getStats();
+    int getStepCount() const { return stepCount; }
+
+    void spawnWorkerAnt(const Position& center);
+    void spawnWarriorAnt(const Position& center);
+
 };

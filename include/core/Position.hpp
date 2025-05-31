@@ -16,4 +16,8 @@ struct Position {
     Position offset(int dx, int dy) const {
         return Position{x + dx, y + dy};
     }
+
+    int manhattanDistance(const Position& other) const {
+        return std::abs(x - other.x) + std::abs(y - other.y);
+    }
 };

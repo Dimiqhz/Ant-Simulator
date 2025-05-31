@@ -2,11 +2,13 @@
 #include "../../include/entities/Ant.hpp"
 #include "../../include/core/Grid.hpp"
 #include "../../include/utils/Random.hpp"
-
-extern Grid* globalGrid;
+#include <iostream>
+#include <memory>
+#include "../include/Globals.hpp"
 
 void Beetle::update() {
-    if (!isAlive()) {
+    // std::cout << "[DEBUG] Beetle::update() at " << position.x << "," << position.y << "\n";
+    if (--lifetime <= 0) {
         globalGrid->removeEntity(getPosition());
         return;
     }
@@ -31,6 +33,11 @@ void Beetle::update() {
     Position newPos = pos.offset(dx, dy);
 
     if (globalGrid->isInside(newPos) && !globalGrid->get(newPos)) {
-        globalGrid->moveEntity(shared_from_this(), newPos);
+        auto beetlePtr = std::dynamic_pointer_cast<Beetle>(shared_from_this());
+        if (beetlePtr) {
+            globalGrid->moveEntity(beetlePtr, newPos);
+        } else {
+            std::cerr << "[ERROR] weak_from_this().lock() failed — объект разрушен\n";
+        }
     }
 }

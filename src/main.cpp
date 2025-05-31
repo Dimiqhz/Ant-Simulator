@@ -1,9 +1,11 @@
 #include "../include/world/World.hpp"
+#include "../include/Globals.hpp"
 #include <iostream>
 #include <string>
 #include <thread>
 #include <chrono>
 #include <map>
+
 
 int main(int argc, char** argv) {
     int width = 8;
@@ -24,6 +26,7 @@ int main(int argc, char** argv) {
     }
 
     World world(width, height);
+    // world.init();
     std::string input;
 
     while (true) {
@@ -31,6 +34,7 @@ int main(int argc, char** argv) {
 
         if (autoMode) {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            std::cout << "Шаг #" << world.getStepCount() << "\n";
         } else {
             std::cout << "Нажмите ENTER для продолжения или введите \"quit\" / \"stats\"\n>>> ";
             std::getline(std::cin, input);
@@ -43,6 +47,6 @@ int main(int argc, char** argv) {
 
         world.runStep();
     }
-
+    std::cout << "Завершение программы — шагов выполнено: " << world.getStepCount() << "\n";
     return 0;
 }

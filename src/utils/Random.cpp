@@ -1,6 +1,5 @@
 #include "../../include/utils/Random.hpp"
 
-// generate random int
 std::mt19937 Random::engine(std::random_device{}());
 
 int Random::randint(int min, int max) {

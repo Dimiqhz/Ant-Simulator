@@ -1,38 +1,27 @@
 #pragma once
 
-#include "../entities/Entity.hpp"
 #include <vector>
 #include <memory>
-#include <optional>
-#include <string>
+#include "Position.hpp"
+#include <entities/Pheromone.hpp>
+
+class Entity;
+class Pheromone;
 
 class Grid {
 private:
-    int width;
-    int height;
+    int width, height;
     std::vector<std::vector<std::shared_ptr<Entity>>> cells;
+    std::vector<std::vector<std::shared_ptr<Pheromone>>> pheromones;
 
 public:
-
-    int getWidth() const { return width; }
-    int getHeight() const { return height; }
-
-    std::vector<std::shared_ptr<Entity>> getAllEntities() const;
-
-    std::vector<std::shared_ptr<Entity>> getEntitiesOfType(const std::string& type) const;
-
-    void remove(const Position& pos) { removeEntity(pos); }
-
-    Grid(int w, int h) : width(w), height(h), cells(h, std::vector<std::shared_ptr<Entity>>(w, nullptr)) {}
+    Grid(int w, int h)
+        : width(w), height(h),
+          cells(h, std::vector<std::shared_ptr<Entity>>(w, nullptr)),
+          pheromones(h, std::vector<std::shared_ptr<Pheromone>>(w, nullptr)) {}
 
     bool isInside(const Position& pos) const {
         return pos.x >= 0 && pos.y >= 0 && pos.x < width && pos.y < height;
-    }
-
-    void place(const std::shared_ptr<Entity>& entity) {
-        if (isInside(entity->getPosition())) {
-            cells[entity->getPosition().y][entity->getPosition().x] = entity;
-        }
     }
 
     std::shared_ptr<Entity> get(const Position& pos) const {
@@ -40,20 +29,24 @@ public:
         return cells[pos.y][pos.x];
     }
 
-    void clearCell(const Position& pos) {
-        if (isInside(pos)) {
-            cells[pos.y][pos.x] = nullptr;
-        }
-    }
+    std::shared_ptr<Pheromone> getPheromone(const Position& pos) const;
 
-    void moveEntity(const std::shared_ptr<Entity>& entity, const Position& newPos) {
-        if (!isInside(newPos)) return;
-        clearCell(entity->getPosition());
-        entity->setPosition(newPos);
-        place(entity);
-    }
+    void place(const std::shared_ptr<Entity>& entity);
+    void placePheromone(const std::shared_ptr<Pheromone>& phero);
+    void removeEntity(const Position& pos);
+    void moveEntity(const std::shared_ptr<Entity>& entity, const Position& newPos);
+    void clearCell(const Position& pos);
 
     void draw() const;
 
-    void removeEntity(const Position& pos) { remove(pos); } // alias
+    int getWidth() const;
+    int getHeight() const;
+
+    std::vector<std::shared_ptr<Entity>> getAllEntities() const;
+    std::vector<std::shared_ptr<Entity>> getEntitiesOfType(const std::string& type) const;
+    std::vector<std::shared_ptr<Pheromone>> getAllPheromones() const;
+    void removePheromone(const Position& pos);
+
+    std::vector<std::shared_ptr<Pheromone>> getPheromonesAround(const Position& center, int radius) const;
+    std::vector<std::shared_ptr<Entity>> getEntitiesAround(const Position& pos, int radius);
 };

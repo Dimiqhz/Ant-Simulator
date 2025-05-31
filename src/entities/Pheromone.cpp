@@ -1,7 +1,6 @@
 #include "../../include/entities/Pheromone.hpp"
 #include "../../include/core/Grid.hpp"
-
-extern Grid* globalGrid;
+#include "../include/Globals.hpp"
 
 void Pheromone::decay() {
     if (strength > 0) --strength;
@@ -12,8 +11,6 @@ bool Pheromone::isGone() const {
 }
 
 void Pheromone::update() {
-    decay();
-    if (isGone()) {
-        globalGrid->removeEntity(getPosition());
-    }
+    lifespan--;
+    if (lifespan <= 0) alive = false;
 }

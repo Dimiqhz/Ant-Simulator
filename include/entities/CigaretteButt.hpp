@@ -14,6 +14,6 @@ public:
 
     void update() override;
 
-    char getSymbol() const override { return '~'; } // символ по ТЗ
+    char getSymbol() const override { return '~'; }
     std::string getType() const override { return "CigaretteButt"; }
 };

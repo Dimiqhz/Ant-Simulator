@@ -4,8 +4,9 @@
 #include "../../include/entities/Pheromone.hpp"
 #include "../../include/core/Grid.hpp"
 #include "../../include/utils/Random.hpp"
-
-extern Grid* globalGrid;
+#include "../include/Globals.hpp"
+#include <iostream>
+#include <core/Direction.hpp>
 
 WorkerAnt::WorkerAnt(Position pos, Direction dir)
     : Ant(pos, dir, 100, 1) {}
@@ -15,41 +16,135 @@ void WorkerAnt::dropFood() { carryingFood = false; }
 bool WorkerAnt::hasFood() const { return carryingFood; }
 
 void WorkerAnt::update() {
-    ageStep();
     if (!isAlive()) return;
+    ageStep();
+    if (!isAlive() || !globalGrid || !anthill) return;
 
-    globalGrid->place(std::make_shared<Pheromone>(getPosition(), 5, 1));
+    auto self = std::dynamic_pointer_cast<WorkerAnt>(shared_from_this());
+    if (!self) return;
 
-    for (auto [dx, dy] : {std::pair{-1,0}, {1,0}, {0,-1}, {0,1}}) {
-        Position adj = position.offset(dx, dy);
-        auto obj = globalGrid->get(adj);
+    int strength = hasFood() ? 30 : 20;
+    int radius = hasFood() ? 2 : 1;
+    std::string owner = hasFood() ? "WorkerWithFood" : "WorkerWithoutFood";
+    globalGrid->placePheromone(std::make_shared<Pheromone>(getPosition(), strength, radius, owner));
 
-        if (!hasFood() && obj && obj->getType() == "Food") {
-            auto food = std::dynamic_pointer_cast<Food>(obj);
-            if (food && !food->isDepleted()) {
-                pickUpFood();
-                food->take(1);
-                globalGrid->moveEntity(shared_from_this(), adj);
-                return;
+    auto current = globalGrid->get(getPosition());
+    if (!hasFood() && current && current->getType() == "Food") {
+        auto food = std::dynamic_pointer_cast<Food>(current);
+        if (food && !food->isDepleted()) {
+            pickUpFood();
+            food->take(1);
+            if (food->isDepleted()) {
+                globalGrid->removeEntity(getPosition());
             }
-        }
-
-        if (hasFood() && obj && obj->getType() == "Anthill") {
-            auto anthill = std::dynamic_pointer_cast<Anthill>(obj);
-            dropFood();
-            anthill->addFood(1);
-            heal(30);
             return;
         }
     }
 
-    std::vector<std::pair<int, int>> moves = {{0,-1}, {1,0}, {0,1}, {-1,0}};
-    std::shuffle(moves.begin(), moves.end(), Random::engine);
+    for (const auto& pos : anthill->getArea()) {
+        if (getPosition() == pos) {
+            if (hasFood()) {
+                dropFood();
+                anthill->addFood(1);
+                heal(30);
+            } else {
+                heal(999);
+            }
+            return;
+        }
+    }
 
-    for (auto [dx, dy] : moves) {
+    std::vector<std::pair<int, int>> directions = {{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
+    std::shuffle(directions.begin(), directions.end(), Random::engine);
+
+    if (!hasFood()) {
+        for (auto [dx, dy] : directions) {
+            Position adj = position.offset(dx, dy);
+            auto obj = globalGrid->get(adj);
+            if (obj && obj->getType() == "Food") {
+                auto food = std::dynamic_pointer_cast<Food>(obj);
+                if (food && !food->isDepleted()) {
+                    globalGrid->moveEntity(self, adj);
+                    pickUpFood();
+                    food->take(1);
+                    if (food->isDepleted()) {
+                        globalGrid->removeEntity(adj);
+                    }
+                    return;
+                }
+            }
+        }
+
+        auto nearby = globalGrid->getPheromonesAround(getPosition(), 3);
+        Position bestMove = position;
+        int maxScore = -1;
+
+        for (auto& ph : nearby) {
+            if (!ph || ph->getOwner() != "WorkerWithFood") continue;
+            int dist = getPosition().manhattanDistance(ph->getPosition());
+            int score = ph->getStrength() - dist;
+            if (score > maxScore && !globalGrid->get(ph->getPosition())) {
+                maxScore = score;
+                bestMove = ph->getPosition();
+            }
+        }
+
+        if (bestMove != position) {
+            globalGrid->moveEntity(self, bestMove);
+            return;
+        }
+
+    } else {
+        bool inOrNearAnthill = false;
+        for (const auto& hillPos : anthill->getArea()) {
+            if (getPosition() == hillPos) {
+                inOrNearAnthill = true;
+                break;
+            }
+            for (auto [dx, dy] : directions) {
+                if (getPosition() == hillPos.offset(dx, dy)) {
+                    inOrNearAnthill = true;
+                    break;
+                }
+            }
+            if (inOrNearAnthill) break;
+        }
+
+        if (inOrNearAnthill) {
+            if (hasFood()) {
+                dropFood();
+                anthill->addFood(1);
+                heal(30);
+            } else {
+                heal(999);
+            }
+            return;
+        }
+
+        auto nearby = globalGrid->getPheromonesAround(getPosition(), 3);
+        Position bestMove = position;
+        int maxScore = -1;
+
+        for (auto& ph : nearby) {
+            if (!ph || ph->getOwner() != "WorkerWithoutFood") continue;
+            int dist = getPosition().manhattanDistance(ph->getPosition());
+            int score = ph->getStrength() - dist;
+            if (score > maxScore && !globalGrid->get(ph->getPosition())) {
+                maxScore = score;
+                bestMove = ph->getPosition();
+            }
+        }
+
+        if (bestMove != position) {
+            globalGrid->moveEntity(self, bestMove);
+            return;
+        }
+    }
+
+    for (auto [dx, dy] : directions) {
         Position newPos = position.offset(dx, dy);
         if (globalGrid->isInside(newPos) && !globalGrid->get(newPos)) {
-            globalGrid->moveEntity(shared_from_this(), newPos);
+            globalGrid->moveEntity(self, newPos);
             return;
         }
     }
